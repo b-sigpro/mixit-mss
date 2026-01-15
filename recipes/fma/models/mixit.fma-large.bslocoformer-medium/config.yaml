@@ -1,0 +1,118 @@
+_base_: ${base_config_path}/train_base.yaml # ${base_config_path}/train_ddp.yaml
+
+seed: 2025
+
+sr: 44100
+n_fft: 2048
+hop_length: 512
+
+n_src: 12
+
+trainer:
+  max_epochs: 150
+  check_val_every_n_epoch: 2
+  gradient_clip_val: 5.0
+  sync_batchnorm: True
+
+  benchmark: True
+  use_distributed_sampler: False
+  precision: bf16-mixed
+
+  callbacks:
+    - _target_: lightning.pytorch.callbacks.ModelCheckpoint
+      filename: "{epoch:04d}"
+      save_top_k: 5
+      monitor: validation/loss
+      mode: min
+      save_last: True
+    - _target_: lightning.pytorch.callbacks.RichProgressBar
+      refresh_rate: 5
+    - _target_: lightning.pytorch.callbacks.RichModelSummary
+      max_depth: 3
+
+datamodule:
+  _target_: mixit_mss.common.datamodules.hdf5_wav_datamodule.DataModule
+  train_dataset_path: ./recipes/fma/hdf5/fma_large_train_seg10sec.hdf5
+  val_dataset_path: ./recipes/fma/hdfd/fma_large_dev_seg10sec.hdf5
+  batch_size: 32
+  val_batch_size: 32
+  sr: ${sr}
+  duration: 6
+  val_duration: 6
+  num_workers: 4
+  return_ref: false
+  use_scatter_dataset: true
+  val_drop_last: true
+
+task:
+  _target_: mixit_mss.mixit.tasks.mixit_task.MixITTask
+  n_fft: ${n_fft}
+  hop_length: ${hop_length}
+  normalize_mixture: true
+  css_validation: false
+  mom_snr_range: [-5, 5]
+
+  model:
+    _target_: mixit_mss.mixit.model.model_wrapper.ModelWrapper
+    n_fft: ${n_fft}
+    hop_length: ${hop_length}
+    fs: ${sr}
+    scaling: true
+
+    css_segment_size: 6
+    css_shift_size: 6
+
+    model:
+      _target_: mixit_mss.mixit.model.bslocoformer.BSLocoformer
+      num_spk: ${n_src}
+      num_chan: 2
+
+      n_layers: 6
+      # general setup
+      emb_dim: 128
+      norm_type: rmsgroupnorm
+      num_groups: 8  # used only in RMSGroupNorm
+      tf_order: ft
+      # self-attention related
+      n_heads: 8
+      flash_attention: true  # available when using mixed precision
+      attention_dim: 128
+      # ffn related
+      ffn_type: 
+        - swiglu_conv1d
+        - swiglu_conv1d
+      ffn_hidden_dim: 
+        - 192
+        - 192
+      conv1d_kernel: 8
+      conv1d_shift: 1
+      dropout: 0.1
+      # others
+      eps: 1.0e-5
+  
+  loss:
+    _target_: mixit_mss.mixit.loss.efficient_mixit.EfficentMixITWrapper
+    loss_func:
+      _target_: mixit_mss.mixit.loss.snr.ThresSNRLoss
+      solve_perm: false
+    sparsity_loss_weight: 0.0
+
+  optimizer_config:
+    _target_: aiaccel.torch.lightning.OptimizerConfig
+    optimizer_generator:
+      _partial_: True
+      _target_: torch.optim.AdamW
+      lr: 1.e-3
+      weight_decay: 1.e-2
+      betas:
+        - 0.9
+        - 0.999
+    scheduler_generator:
+      _partial_: True
+      _target_: mixit_mss.common.lr_schedulers.warmup.WarmUpStepLR
+      warmup_steps: 4000
+      decay_start_step: 4001 
+      decay_stop_step: 152850  # 2038 steps x 75 epochs
+      step_size: 2038  # 1 epoch
+      decay: 0.965
+    scheduler_interval: step

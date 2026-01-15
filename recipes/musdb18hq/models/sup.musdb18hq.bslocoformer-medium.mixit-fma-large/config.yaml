@@ -1,0 +1,4 @@
+_base_: ../sup.musdb18hq.bslocoformer-medium/config.yaml
+
+task:
+  pretrained_model_path: ./model_weights/mixit/mixit.fma-large.bslocoformer-medium.4outputs/checkpoints/model.pth

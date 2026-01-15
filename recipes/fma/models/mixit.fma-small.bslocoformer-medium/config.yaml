@@ -1,0 +1,11 @@
+_base_: ../mixit.fma-large.bslocoformer-medium/config.yaml
+
+trainer:
+  max_steps: 152850
+  check_val_every_n_epoch: null
+  val_check_interval: 2038
+
+datamodule:
+  train_dataset_path: ./recipes/fma/hdf5/fma_small_train_seg10sec.hdf5
+  val_dataset_path: ./recipes/fma/hdf5/fma_small_dev_seg10sec.hdf5
+ 

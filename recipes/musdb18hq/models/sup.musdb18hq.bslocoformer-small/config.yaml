@@ -1,0 +1,31 @@
+_base_: ../sup.musdb18hq.bslocoformer-medium/config.yaml
+
+task:
+  model:
+    model:
+      _target_: mixit_mss.mixit.model.bslocoformer.BSLocoformer
+      num_spk: ${n_src}
+      num_chan: 2
+
+      n_layers: 4
+      # general setup
+      emb_dim: 96
+      norm_type: rmsgroupnorm
+      num_groups: 4  # used only in RMSGroupNorm
+      tf_order: ft
+      # self-attention related
+      n_heads: 4
+      flash_attention: true  # available when using mixed precision
+      attention_dim: 96
+      # ffn related
+      ffn_type: 
+        - swiglu_conv1d
+        - swiglu_conv1d
+      ffn_hidden_dim: 
+        - 128
+        - 128
+      conv1d_kernel: 8
+      conv1d_shift: 1
+      dropout: 0.1
+      # others
+      eps: 1.0e-5

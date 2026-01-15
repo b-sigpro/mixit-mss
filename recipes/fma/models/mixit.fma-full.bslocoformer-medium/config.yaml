@@ -1,0 +1,6 @@
+_base_: ../mixit.fma-large.bslocoformer-medium/config.yaml
+
+datamodule:
+  train_dataset_path: ./recipes/fma/hdf5/fma_full_train_seg10sec.hdf5
+  val_dataset_path: ./recipes/fma/hdf5/fma_full_dev_seg10sec.hdf5
+ 
