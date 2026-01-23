@@ -122,12 +122,12 @@ np=1  # The number of parallel processes when making the HDF5. np>1 leads to fas
 ```
 
 ### Training
-The main script for training is in `train.py`, which can be run by
+To run the training, we use `train.sh` under `recipes/fma/models/mixit.fma-${data_size}.bslocoformer-${model_size}/train.sh`, like
 ```sh
-python -m aiaccel.torch.apps.train /path/to/config.yaml
+./recipes/fma/models/mixit.fma-large.bslocoformer-medium/train.sh
 ```
-We provide several configuration files  `recipes/fma/models/mixit.fma-${data_size}.bslocoformer-${model_size}/config.yaml`.
 
+To see the model configuration, please refer to `config.yaml` under each corresponding directory.
 The main configuration file is `recipes/fma/models/mixit.fma-large.bslocoformer-medium/config.yaml`, and the other files inherits this file while overwriting only some specific parts.
 
 After training, the directory structure should look like as follows. The lightning's checkpoints are saved under `checkpoints`. The training progress can be watched with Tensorboard.
@@ -171,9 +171,9 @@ We provide a script that selects 4 output channels using the validation set of t
 
 ### Training
 
-Training on MUSDB18HQ can be in a similar manner to that on FMA:
+Training on MUSDB18HQ can be in a similar manner to that on FMA, like:
 ```sh
-python -m aiaccel.torch.apps.train /path/to/config.yaml
+./recipes/musdb18hq/models/sup.musdb18hq.bslocoformer-medium/train.sh
 ```
 
 The directory strucure after training is similar to that of FMA.
