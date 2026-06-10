@@ -215,7 +215,7 @@ threadpoolctl
 tinycss2
 tomli
 toolz==1.0.0
-torch==2.6.0+cu126
+torch==2.8.0
 torchaudio==2.6.0+cu126
 torchmetrics==1.6.1
 torchvision==0.21.0+cu126
